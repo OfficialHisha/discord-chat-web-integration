@@ -2,7 +2,7 @@ import '../style/username.css'
 import { useEffect, useState } from 'react'
 import WebhookMessage from '../webhookMessage'
 
-export default function App() {
+export default function Chat() {
     const [name, setName] = useState('')
     const [message, setMessage] = useState('')
     const [chatMessages, setChatMessages] = useState([''])
