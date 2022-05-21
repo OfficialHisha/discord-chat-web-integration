@@ -5,7 +5,7 @@ import cors from 'cors'
 import { sendWebhookMessage } from './webhook'
 import WebhookMessage from './webhookMessage'
 
-const subscribers: Array<WebSocket> = new Array<WebSocket>()
+const subscribers: WebSocket[] = []
 let wss: Server<WebSocket>
 
 export default async (port: number) => {
@@ -22,6 +22,7 @@ export default async (port: number) => {
             const webhookMessage: WebhookMessage = JSON.parse(message)
             
             sendWebhookMessage(webhookMessage)
+            sendRawSocketMessage(message.toString(), [ws])
         })
 
         subscribers.push(ws)
@@ -36,7 +37,7 @@ export default async (port: number) => {
     });
 }
 
-export const sendSocketMessage = async (message: WebhookMessage) => {
+export const sendSocketMessage = async (message: WebhookMessage, exclude_clients: [WebSocket] | undefined = undefined) => {
     if (wss === null) {
         console.error('Websocket is not initialized!')
         return
@@ -44,9 +45,14 @@ export const sendSocketMessage = async (message: WebhookMessage) => {
     
     console.log('Sending message "%s" to subscribers', message)
 
-    const jsonMessage = JSON.stringify(message)
+    await sendRawSocketMessage(JSON.stringify(message), exclude_clients)
 
+}
+
+const sendRawSocketMessage = async (message: string, exclude_clients: [WebSocket] | undefined = undefined) => {
     subscribers.forEach(subscriber => {
-        subscriber.send(jsonMessage)
+        if(exclude_clients && exclude_clients.includes(subscriber)) return
+        
+        subscriber.send(message)
     });
 }
