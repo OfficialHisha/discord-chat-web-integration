@@ -1,4 +1,5 @@
 import { Client } from "discord.js";
+import { log } from "../logging/logger";
 
 export default (client: Client): void => {
     client.on("ready", async () => {
@@ -6,6 +7,6 @@ export default (client: Client): void => {
             return;
         }
 
-        console.log(`${client.user.username} is online`);
+        log(`${client.user.username} is online`);
     });
 };

@@ -1,6 +1,7 @@
 import { Client, Message } from "discord.js";
-import WebhookMessage from "../webhookMessage";
-import { sendSocketMessage } from "../websocket";
+import { discordChatroomDictionary, sendChatroomMessage } from "../chatServer";
+import { MessageType } from "../network/messageType";
+import NetworkMessage from "../network/networkMessage";
 
 export default (client: Client): void => {
     client.on("messageCreate", async message => {
@@ -13,9 +14,7 @@ export default (client: Client): void => {
 };
 
 const handleMessage = async (message: Message): Promise<void> => {
-    console.log(message)
+    const networkMessage: NetworkMessage = new NetworkMessage(message.author.username, MessageType.DISCORD_MESSAGE, message.content, discordChatroomDictionary[message.channelId])
 
-    const webhookMessage: WebhookMessage = new WebhookMessage(message.author.username, message.content)
-
-    sendSocketMessage(webhookMessage)
+    await sendChatroomMessage(networkMessage)
 };
