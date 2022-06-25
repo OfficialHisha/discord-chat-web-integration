@@ -1,0 +1,14 @@
+{
+    "chatrooms": {
+        "main": {
+            "motd": "Welcome to the main chatroom!",
+            "discord_webhook": "discord webhook for main discord channel",
+            "discord_channel_id": "discord id for main discord channel"
+        },
+        "second": {
+            "motd": "Welcome to the second chatroom!",
+            "discord_webhook": "discord webhook for second discord channel",
+            "discord_channel_id": "discord id for second discord channel"
+        }
+    }
+}

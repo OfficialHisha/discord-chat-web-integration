@@ -35,22 +35,13 @@ export default class ChatRoom {
     public set discordWebhook(v : WebhookClient | undefined) {
         this._discordWebhook = v;
     }
-
-    private _discordChannelId : string | undefined;
-    public get discordChannelId() : string | undefined {
-        return this._discordChannelId;
-    }
-    public set discordChannelId(v : string | undefined) {
-        this._discordChannelId = v;
-    }
     
 
-    constructor(roomName: string, motd: string | undefined, webhookUrl: string | undefined = undefined, discordChannelId: string | undefined = undefined) {
+    constructor(roomName: string, motd: string | undefined, webhookUrl: string | undefined = undefined) {
         this._roomName = roomName
         this._motd = motd
         if(webhookUrl)
             this._discordWebhook = new WebhookClient({ url: webhookUrl })
-        this._discordChannelId = discordChannelId
     }
 
 
@@ -58,7 +49,7 @@ export default class ChatRoom {
         this._subscribers.push(client)
 
         if(this._motd) {
-            const motdMsg: NetworkMessage = new NetworkMessage('System', MessageType.MOTD, this._motd)
+            const motdMsg: NetworkMessage = new NetworkMessage('System', MessageType.MOTD, this._motd, this._roomName)
             sendNetworkMessageTo(motdMsg, [client])
         }
         

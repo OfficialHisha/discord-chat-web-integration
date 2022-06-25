@@ -1,4 +1,6 @@
 node_modules/
 .gitignore
+.env
+chatrooms.json
 package-lock.json
 README.md

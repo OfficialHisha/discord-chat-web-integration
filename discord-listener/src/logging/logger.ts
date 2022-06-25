@@ -1,6 +1,6 @@
 import { LogLevel, loglevelIdentifier } from "./logLevel";
 
-const useLoglevel = LogLevel.DEBUG
+const useLoglevel = process.env.LOGLEVEL || LogLevel.INFO
 
 export const log = (message: string, loglevel: LogLevel = LogLevel.INFO, ...optionalParams: any[]) => {
     

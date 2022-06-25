@@ -7,16 +7,28 @@ import NetworkMessage from './network/networkMessage'
 import { MessageType } from './network/messageType'
 import { log } from './logging/logger'
 import { LogLevel } from './logging/logLevel'
+import { ChatroomConfigRoot } from './chatroomConfig'
+import { readFile } from 'fs/promises'
 
-const chatRooms: {[name: string]: ChatRoom} = {
-    'main': new ChatRoom('main', process.env.MOTD, process.env.DISCORD_WEBHOOK_MAIN!, '974708303575781396')
-}
-export const discordChatroomDictionary: {[discordChannelId: string]: string} = {
-    '974708303575781396': 'main'
-}
+const chatRooms: {[name: string]: ChatRoom} = {}
+export const discordChatroomDictionary: {[discordChannelId: string]: string} = {}
+
 let wss: Server<WebSocket>
 
 export default async (port: number) => {
+    log('test', LogLevel.DEBUG)
+
+    const chatroomJson: ChatroomConfigRoot = JSON.parse(await readFile(process.env.CHATROOM_FILE!, {encoding: 'utf-8'}))
+
+    for (const key in chatroomJson.chatrooms) {
+        if (Object.prototype.hasOwnProperty.call(chatroomJson.chatrooms, key)) {
+            const chatroom = chatroomJson.chatrooms[key];
+            chatRooms[key] = new ChatRoom(key, chatroom.motd, chatroom.discord_webhook)
+            discordChatroomDictionary[chatroom.discord_channel_id] = key
+            log('Loaded chatroom', LogLevel.INFO, key)
+        }
+    }
+
     const app = express()
     
     app.use(cors())
@@ -45,7 +57,7 @@ export const sendChatroomMessage = async (message: NetworkMessage) => {
 
     if(!message.targetRoom) return
 
-    await chatRooms[message.targetRoom].broadcastMessage(message)
+    await chatRooms[message.targetRoom]?.broadcastMessage(message)
 }
 
 export const sendNetworkMessageTo = async (message: NetworkMessage, recipients: [WebSocket]) => {
@@ -69,26 +81,32 @@ const handleNetworkMessage = async (message: NetworkMessage, sender: WebSocket) 
 
             await sendNetworkMessageTo(pongMsg, [sender])
             return
+        case MessageType.ROOM_LIST_REQUEST:
+            log('ROOM_LIST_REQUEST received', LogLevel.DEBUG)
+            const rooms: string = Object.keys(chatRooms).map((key) => {return `${key}`}).toString()
+            const response: NetworkMessage = new NetworkMessage('System', MessageType.ROOM_LIST_RESPONSE, rooms)
+            await sendNetworkMessageTo(response, [sender])
+            return
         case MessageType.JOIN_ROOM:
             log('JOIN_ROOM received', LogLevel.DEBUG)
 
             if(!message.targetRoom) return
 
-            chatRooms[message.targetRoom].subscribe(sender)
+            chatRooms[message.targetRoom]?.subscribe(sender)
             break
         case MessageType.LEAVE_ROOM:
             log('LEAVE_ROOM Received', LogLevel.DEBUG)
 
             if(!message.targetRoom) return
 
-            chatRooms[message.targetRoom].unsubscribe(sender)
+            chatRooms[message.targetRoom]?.unsubscribe(sender)
             break
         case MessageType.MESSAGE:
             log('MESSAGE received', LogLevel.DEBUG)
 
             if(!message.targetRoom || !message.messageContent) return
 
-            await chatRooms[message.targetRoom].broadcastMessage(message, [sender])
+            await chatRooms[message.targetRoom]?.broadcastMessage(message, [sender])
             break
         default:
             return
